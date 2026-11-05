@@ -6,7 +6,7 @@ pipeline {
 
     environment {
         // >>> CHANGE THIS to your own registry login server (az acr show -n <name> --query loginServer -o tsv)
-        ACR_LOGIN_SERVER = 'YOUR_REGISTRY_NAME.azurecr.io'
+        ACR_LOGIN_SERVER = 'cicddemoanannya.azurecr.io'
         IMAGE_NAME       = 'cicd-demo'
     }
 
