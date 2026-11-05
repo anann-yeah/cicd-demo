@@ -1,0 +1,46 @@
+---
+# Usage: ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e image=<registry>/cicd-demo:<tag>
+- name: Deploy cicd-demo to Kubernetes
+  hosts: local
+  gather_facts: false
+  vars:
+    k8s_namespace: default
+    app_name: cicd-demo
+    manifests_dir: "{{ playbook_dir }}/../k8s"
+
+  tasks:
+    - name: Make sure the image variable was supplied
+      ansible.builtin.assert:
+        that:
+          - image is defined
+          - image | length > 0
+        fail_msg: "Pass the image with -e image=<registry>/cicd-demo:<tag>"
+
+    - name: Check kubectl can reach the cluster
+      ansible.builtin.command: kubectl get nodes
+      changed_when: false
+
+    - name: Apply the Service
+      ansible.builtin.command: "kubectl apply -n {{ k8s_namespace }} -f {{ manifests_dir }}/service.yaml"
+      register: service_apply
+      changed_when: "'configured' in service_apply.stdout or 'created' in service_apply.stdout"
+
+    - name: Apply the Deployment with the new image
+      ansible.builtin.command: "kubectl apply -n {{ k8s_namespace }} -f -"
+      args:
+        stdin: "{{ lookup('ansible.builtin.file', manifests_dir + '/deployment.yaml') | replace('IMAGE_PLACEHOLDER', image) }}"
+      register: deployment_apply
+      changed_when: "'configured' in deployment_apply.stdout or 'created' in deployment_apply.stdout"
+
+    - name: Wait for the rolling update to finish
+      ansible.builtin.command: "kubectl rollout status deployment/{{ app_name }} -n {{ k8s_namespace }} --timeout=300s"
+      changed_when: false
+
+    - name: Collect pod and service status
+      ansible.builtin.command: "kubectl get deployment,pods,svc -n {{ k8s_namespace }} -l app={{ app_name }} -o wide"
+      register: status
+      changed_when: false
+
+    - name: Show status
+      ansible.builtin.debug:
+        msg: "{{ status.stdout_lines }}"

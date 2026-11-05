@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cicd-demo
+  labels:
+    app: cicd-demo
+spec:
+  type: LoadBalancer                # cloud provider creates a public IP
+  selector:
+    app: cicd-demo                  # routes to pods with this label
+  ports:
+    - name: http
+      port: 80                      # public port
+      targetPort: 8080              # container port

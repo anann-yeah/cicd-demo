@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicd-demo
+  labels:
+    app: cicd-demo
+spec:
+  replicas: 2                       # two pods => no downtime during updates
+  revisionHistoryLimit: 5           # keep 5 old ReplicaSets so we can roll back
+  selector:
+    matchLabels:
+      app: cicd-demo
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1                   # start 1 extra new pod first...
+      maxUnavailable: 0             # ...and never drop below 2 ready pods
+  template:
+    metadata:
+      labels:
+        app: cicd-demo
+    spec:
+      containers:
+        - name: cicd-demo
+          # IMAGE_PLACEHOLDER is replaced by Ansible with <registry>/cicd-demo:<git-sha>
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          readinessProbe:           # gate traffic until the app is ready
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          livenessProbe:            # restart the container if it hangs
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false

@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+k8s/
+ansible/
+.idea/
+.vscode/
+*.iml
+*.md
+*.log
