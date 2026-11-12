@@ -1,0 +1,11 @@
+# ConfigMap = non-sensitive settings kept OUTSIDE the image.
+# (Passwords/keys would go in a Secret instead.)
+# Change APP_MESSAGE here, restart the pods, and the web page changes - no rebuild.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cicd-demo-config
+  labels:
+    app: cicd-demo
+data:
+  APP_MESSAGE: "Hello from the ConfigMap - v2"

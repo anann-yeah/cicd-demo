@@ -25,6 +25,11 @@
       register: service_apply
       changed_when: "'configured' in service_apply.stdout or 'created' in service_apply.stdout"
 
+    - name: Apply the ConfigMap (non-sensitive settings)
+      ansible.builtin.command: "kubectl apply -n {{ k8s_namespace }} -f {{ manifests_dir }}/configmap.yaml"
+      register: configmap_apply
+      changed_when: "'configured' in configmap_apply.stdout or 'created' in configmap_apply.stdout"
+
     - name: Apply the Deployment with the new image
       ansible.builtin.command: "kubectl apply -n {{ k8s_namespace }} -f -"
       args:

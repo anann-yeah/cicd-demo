@@ -26,6 +26,12 @@ spec:
           image: IMAGE_PLACEHOLDER
           ports:
             - containerPort: 8080
+          env:
+            - name: APP_MESSAGE         # Spring maps APP_MESSAGE -> app.message
+              valueFrom:
+                configMapKeyRef:
+                  name: cicd-demo-config
+                  key: APP_MESSAGE
           resources:
             requests:
               cpu: 100m
